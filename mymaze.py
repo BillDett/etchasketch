@@ -1,4 +1,5 @@
 import random
+import sys
 import pygame
 pygame.init()
 
@@ -9,27 +10,17 @@ PURPLE = (100,0,100)
 RED = (255,0,0)
 GREEN = (0,255,0)
 
-size = (200,200)
 #size = (1024,900)
-screen = pygame.display.set_mode(size)
 
-pygame.display.set_caption("Maze Generator")
 
-done = False
 
-clock = pygame.time.Clock()
 
-width = 35
-cols = int(size[0] / width)
-rows = int(size[1] / width)
-
-stack = []
 
 class Cell():
-    def __init__(self,x,y):
-        global width
-        self.x = x * width
-        self.y = y * width
+    def __init__(self,x,y,m):
+        self.maze = m
+        self.x = x * self.maze.width
+        self.y = y * self.maze.width
         
         self.visited = False
         self.current = False
@@ -50,34 +41,34 @@ class Cell():
     
     def draw(self):
         if self.entry:
-            pygame.draw.rect(screen,GREEN,(self.x,self.y,width,width))
+            pygame.draw.rect(self.maze.screen,GREEN,(self.x,self.y,self.maze.width,self.maze.width))
         elif self.exit:
-            pygame.draw.rect(screen,RED,(self.x,self.y,width,width))
+            pygame.draw.rect(self.maze.screen,RED,(self.x,self.y,self.maze.width,self.maze.width))
         elif self.visited:
-            pygame.draw.rect(screen,WHITE,(self.x,self.y,width,width))
+            pygame.draw.rect(self.maze.screen,WHITE,(self.x,self.y,self.maze.width,self.maze.width))
         
             if self.walls[0]:
-                pygame.draw.line(screen,BLACK,(self.x,self.y),((self.x + width),self.y),1) # top
+                pygame.draw.line(self.maze.screen,BLACK,(self.x,self.y),((self.x + self.maze.width),self.y),1) # top
             if self.walls[1]:
-                pygame.draw.line(screen,BLACK,((self.x + width),self.y),((self.x + width),(self.y + width)),1) # right
+                pygame.draw.line(self.maze.screen,BLACK,((self.x + self.maze.width),self.y),((self.x + self.maze.width),(self.y + self.maze.width)),1) # right
             if self.walls[2]:
-                pygame.draw.line(screen,BLACK,((self.x + width),(self.y + width)),(self.x,(self.y + width)),1) # bottom
+                pygame.draw.line(self.maze.screen,BLACK,((self.x + self.maze.width),(self.y + self.maze.width)),(self.x,(self.y + self.maze.width)),1) # bottom
             if self.walls[3]:
-                pygame.draw.line(screen,BLACK,(self.x,(self.y + width)),(self.x,self.y),1) # left
+                pygame.draw.line(self.maze.screen,BLACK,(self.x,(self.y + self.maze.width)),(self.x,self.y),1) # left
     
     def checkNeighbors(self):
-        #print("Top; y: " + str(int(self.y / width)) + ", y - 1: " + str(int(self.y / width) - 1))
-        if int(self.y / width) - 1 >= 0:
-            self.top = grid[int(self.y / width) - 1][int(self.x / width)]
-        #print("Right; x: " + str(int(self.x / width)) + ", x + 1: " + str(int(self.x / width) + 1))
-        if int(self.x / width) + 1 <= cols - 1:
-            self.right = grid[int(self.y / width)][int(self.x / width) + 1]
-        #print("Bottom; y: " + str(int(self.y / width)) + ", y + 1: " + str(int(self.y / width) + 1))
-        if int(self.y / width) + 1 <= rows - 1:
-            self.bottom = grid[int(self.y / width) + 1][int(self.x / width)]
-        #print("Left; x: " + str(int(self.x / width)) + ", x - 1: " + str(int(self.x / width) - 1))
-        if int(self.x / width) - 1 >= 0:
-            self.left = grid[int(self.y / width)][int(self.x / width) - 1]
+        #print("Top; y: " + str(int(self.y / self.maze.width)) + ", y - 1: " + str(int(self.y / self.maze.width) - 1))
+        if int(self.y / self.maze.width) - 1 >= 0:
+            self.top = self.maze.grid[int(self.y / self.maze.width) - 1][int(self.x / self.maze.width)]
+        #print("Right; x: " + str(int(self.x / self.maze.width)) + ", x + 1: " + str(int(self.x / self.maze.width) + 1))
+        if int(self.x / self.maze.width) + 1 <= self.maze.cols - 1:
+            self.right = self.maze.grid[int(self.y / self.maze.width)][int(self.x / self.maze.width) + 1]
+        #print("Bottom; y: " + str(int(self.y / self.maze.width)) + ", y + 1: " + str(int(self.y / self.maze.width) + 1))
+        if int(self.y / self.maze.width) + 1 <= self.maze.rows - 1:
+            self.bottom = self.maze.grid[int(self.y / self.maze.width) + 1][int(self.x / self.maze.width)]
+        #print("Left; x: " + str(int(self.x / self.maze.width)) + ", x - 1: " + str(int(self.x / self.maze.width) - 1))
+        if int(self.x / self.maze.width) - 1 >= 0:
+            self.left = self.maze.grid[int(self.y / self.maze.width)][int(self.x / self.maze.width) - 1]
         #print("--------------------")
         
         if self.top != 0:
@@ -99,73 +90,96 @@ class Cell():
         else:
             return False
 
-def removeWalls(current_cell,next_cell):
-    x = int(current_cell.x / width) - int(next_cell.x / width)
-    y = int(current_cell.y / width) - int(next_cell.y / width)
-    if x == -1: # right of current
-        current_cell.walls[1] = False
-        next_cell.walls[3] = False
-    elif x == 1: # left of current
-        current_cell.walls[3] = False
-        next_cell.walls[1] = False
-    elif y == -1: # bottom of current
-        current_cell.walls[2] = False
-        next_cell.walls[0] = False
-    elif y == 1: # top of current
-        current_cell.walls[0] = False
-        next_cell.walls[2] = False
+
+class Maze():
+
+    def __init__(self, w, h, wd):
+        global current_cell
+        self.size = (w,h)
+        self.width = wd
+        self.cols = int(self.size[0] / self.width)
+        self.rows = int(self.size[1] / self.width)
+        self.stack = []
+        self.screen = None	# This needs to get set after construction before drawing
+
+        # Initialize an empty grid
+        self.grid = []
+        for y in range(self.rows):
+            self.grid.append([])
+            for x in range(self.cols):
+                self.grid[y].append(Cell(x,y,self))
+
+
+        current_cell = self.grid[0][0]
+        self.grid[0][0].entry = True
+        self.grid[self.rows-1][self.cols-1].exit = True
+
+    def removeWalls(self, current_cell,next_cell):
+        x = int(current_cell.x / self.width) - int(next_cell.x / self.width)
+        y = int(current_cell.y / self.width) - int(next_cell.y / self.width)
+        if x == -1: # right of current
+            current_cell.walls[1] = False
+            next_cell.walls[3] = False
+        elif x == 1: # left of current
+            current_cell.walls[3] = False
+            next_cell.walls[1] = False
+        elif y == -1: # bottom of current
+            current_cell.walls[2] = False
+            next_cell.walls[0] = False
+        elif y == 1: # top of current
+            current_cell.walls[0] = False
+            next_cell.walls[2] = False
     
-def generateMaze():
-    global current_cell
-    mazed = False
-    while not mazed:
-        current_cell.visited = True
-        current_cell.current = True
+    def generateMaze(self):
+        global current_cell
+        mazed = False
+        while not mazed:
+            current_cell.visited = True
+            current_cell.current = True
     
-        next_cell = current_cell.checkNeighbors()
+            next_cell = current_cell.checkNeighbors()
     
-        if next_cell != False:
-            current_cell.neighbors = []
+            if next_cell != False:
+                current_cell.neighbors = []
+            
+                self.stack.append(current_cell)
         
-            stack.append(current_cell)
+                self.removeWalls(current_cell,next_cell)
         
-            removeWalls(current_cell,next_cell)
+                current_cell.current = False
         
-            current_cell.current = False
-        
-            current_cell = next_cell
+                current_cell = next_cell
     
-        elif len(stack) > 0:
-            current_cell.current = False
-            current_cell = stack.pop()
+            elif len(self.stack) > 0:
+                current_cell.current = False
+                current_cell = self.stack.pop()
         
-        elif len(stack) == 0:
-            mazed = True
+            elif len(self.stack) == 0:
+                mazed = True
 
-def drawMaze():
-    for y in range(rows):
-        for x in range(cols):
-            grid[y][x].draw()
+    def drawMaze(self):
+        if self.screen is None:
+            print("Error! Need to set screen first!")
+            sys.exit()
 
-
-# Initialize an empty grid
-grid = []
-for y in range(rows):
-    grid.append([])
-    for x in range(cols):
-        grid[y].append(Cell(x,y))
+        for y in range(self.rows):
+            for x in range(self.cols):
+                self.grid[y][x].draw()
 
 
-current_cell = grid[0][0]
-grid[0][0].entry = True
-grid[rows-1][cols-1].exit = True
-next_cell = 0
+
+
+
+m = Maze(200, 200, 35)
+screen = pygame.display.set_mode(m.size)
+pygame.display.set_caption("Maze Generator")
+clock = pygame.time.Clock()
 screen.fill(GREY)
+done = False
 
-
-generateMaze()
-
-drawMaze()
+m.screen = screen
+m.generateMaze()
+m.drawMaze()
 
 # -------- Main Program Loop -----------
 while not done:
