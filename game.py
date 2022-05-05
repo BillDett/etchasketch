@@ -8,6 +8,7 @@ import adafruit_mcp3xxx.mcp3008 as MCP
 from adafruit_mcp3xxx.analog_in import AnalogIn
 import pygame as pg
 import RPi.GPIO as GPIO
+from mymaze import Maze
 
 # Etch-a-Sketch
 #
@@ -80,8 +81,14 @@ pg.mouse.set_visible(True)
 
 background = pg.Surface(screen.get_size())
 background = background.convert()
-background.fill(grey)
+#background.fill(grey)
 width, height = background.get_size()
+
+# Maze stuff
+m = Maze(width, height, 100)
+m.screen = background
+m.generateMaze()
+m.drawMaze()
 
 # create the paddles
 paddle_x = Paddle(chan0, 0, width)
@@ -110,7 +117,8 @@ while going:
 
 	# Did they hit the 'shake' button? If so, clear screen
 	if GPIO.event_detected(button):
-		background.fill(grey)
+                #background.fill(grey)
+		m.drawMaze()
 
 	# Listen for any keystroke- if we got quit signal or 'q', exit app
 	# NOTE: This doesn't work if we run this remotely via ssh

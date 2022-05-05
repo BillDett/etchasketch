@@ -1,7 +1,7 @@
 import random
 import sys
 import pygame
-pygame.init()
+#pygame.init()
 
 WHITE = (255,255,255)
 GREY = (20,20,20)
@@ -9,12 +9,6 @@ BLACK = (0,0,0)
 PURPLE = (100,0,100)
 RED = (255,0,0)
 GREEN = (0,255,0)
-
-#size = (1024,900)
-
-
-
-
 
 class Cell():
     def __init__(self,x,y,m):
@@ -170,27 +164,27 @@ class Maze():
 
 
 
-m = Maze(200, 200, 35)
-screen = pygame.display.set_mode(m.size)
-pygame.display.set_caption("Maze Generator")
-clock = pygame.time.Clock()
-screen.fill(GREY)
-done = False
+#m = Maze(200, 200, 35)
+#screen = pygame.display.set_mode(m.size)
+#pygame.display.set_caption("Maze Generator")
+#clock = pygame.time.Clock()
+#screen.fill(GREY)
+#done = False
 
-m.screen = screen
-m.generateMaze()
-m.drawMaze()
+#m.screen = screen
+#m.generateMaze()
+#m.drawMaze()
 
 # -------- Main Program Loop -----------
-while not done:
+#while not done:
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            done = True
+#    for event in pygame.event.get():
+#        if event.type == pygame.QUIT:
+#            done = True
     
     
-    pygame.display.flip()
+#    pygame.display.flip()
     
-    clock.tick(60)
+#    clock.tick(60)
 
-pygame.quit()
+#pygame.quit()
