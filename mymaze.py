@@ -10,6 +10,7 @@ PURPLE = (100,0,100)
 RED = (255,0,0)
 GREEN = (0,255,0)
 
+
 class Cell():
     def __init__(self,x,y,m):
         self.maze = m
@@ -25,6 +26,9 @@ class Cell():
         
         # neighbors
         self.neighbors = []
+
+        self.maze_lines = []
+
         
         self.top = 0
         self.right = 0
@@ -37,18 +41,18 @@ class Cell():
         if self.entry:
             pygame.draw.rect(self.maze.screen,GREEN,(self.x,self.y,self.maze.width,self.maze.width))
         elif self.exit:
-            pygame.draw.rect(self.maze.screen,RED,(self.x,self.y,self.maze.width,self.maze.width))
+            self.maze.exit_rect = pygame.draw.rect(self.maze.screen,RED,(self.x,self.y,self.maze.width,self.maze.width))
         elif self.visited:
             pygame.draw.rect(self.maze.screen,WHITE,(self.x,self.y,self.maze.width,self.maze.width))
-        
             if self.walls[0]:
-                pygame.draw.line(self.maze.screen,BLACK,(self.x,self.y),((self.x + self.maze.width),self.y),1) # top
+                the_line = pygame.draw.line(self.maze.screen,BLACK,(self.x,self.y),((self.x + self.maze.width),self.y),1) # top
             if self.walls[1]:
-                pygame.draw.line(self.maze.screen,BLACK,((self.x + self.maze.width),self.y),((self.x + self.maze.width),(self.y + self.maze.width)),1) # right
+                the_line = pygame.draw.line(self.maze.screen,BLACK,((self.x + self.maze.width),self.y),((self.x + self.maze.width),(self.y + self.maze.width)),1) # right
             if self.walls[2]:
-                pygame.draw.line(self.maze.screen,BLACK,((self.x + self.maze.width),(self.y + self.maze.width)),(self.x,(self.y + self.maze.width)),1) # bottom
+                the_line = pygame.draw.line(self.maze.screen,BLACK,((self.x + self.maze.width),(self.y + self.maze.width)),(self.x,(self.y + self.maze.width)),1) # bottom
             if self.walls[3]:
-                pygame.draw.line(self.maze.screen,BLACK,(self.x,(self.y + self.maze.width)),(self.x,self.y),1) # left
+                the_line = pygame.draw.line(self.maze.screen,BLACK,(self.x,(self.y + self.maze.width)),(self.x,self.y),1) # left
+            self.maze.maze_lines.append(the_line)  # Remember the bounding Rect for this line for collision detection
     
     def checkNeighbors(self):
         #print("Top; y: " + str(int(self.y / self.maze.width)) + ", y - 1: " + str(int(self.y / self.maze.width) - 1))
@@ -95,6 +99,8 @@ class Maze():
         self.rows = int(self.size[1] / self.width)
         self.stack = []
         self.screen = None	# This needs to get set after construction before drawing
+
+        self.exit_rect = 0	# Which cell rect is the exit?
 
         # Initialize an empty grid
         self.grid = []
@@ -155,6 +161,8 @@ class Maze():
         if self.screen is None:
             print("Error! Need to set screen first!")
             sys.exit()
+
+        self.maze_lines = []
 
         for y in range(self.rows):
             for x in range(self.cols):

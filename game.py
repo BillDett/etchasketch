@@ -90,6 +90,8 @@ m.screen = background
 m.generateMaze()
 m.drawMaze()
 
+print("We have " + str(len(m.maze_lines)) + " maze lines")
+
 # create the paddles
 paddle_x = Paddle(chan0, 0, width)
 paddle_y = Paddle(chan1, 0, height)
@@ -100,34 +102,40 @@ last_y = paddle_y.read_value()
 
 going = True
 while going:
-	clock.tick(60)
-	screen.blit(background, (0,0))
-	pg.display.flip()
+        clock.tick(60)
+        screen.blit(background, (0,0))
+        pg.display.flip()
 
 	# Read the Paddles and render a segment from where we were to where we now are
-	current_x = paddle_x.read_value()
-	current_y = paddle_y.read_value()
+        current_x = paddle_x.read_value()
+        current_y = paddle_y.read_value()
 	#print('X = {} / Y = {}'.format(current_x, current_y))	
 	# Need to think about cursor- probably need a sprite instead
 	#cursor = pg.Rect((current_x, current_y), (5,5))
 	#pg.draw.ellipse(background, white, cursor)
-	pg.draw.line(background, black, (last_x, last_y), (current_x, current_y), 2)
-	last_x = current_x
-	last_y = current_y
+        this_line = pg.draw.line(background, black, (last_x, last_y), (current_x, current_y), 2)
+        last_x = current_x
+        last_y = current_y
+        idx = this_line.collidelist(m.maze_lines)
+        if idx != -1:
+            print("BOING ON WALL " + str(idx))
+
+        if this_line.colliderect(m.exit_rect):
+            print("YOU GOT OUT!")
 
 	# Did they hit the 'shake' button? If so, clear screen
-	if GPIO.event_detected(button):
+        if GPIO.event_detected(button):
                 #background.fill(grey)
-		m.drawMaze()
+                m.drawMaze()
 
 	# Listen for any keystroke- if we got quit signal or 'q', exit app
 	# NOTE: This doesn't work if we run this remotely via ssh
-	for event in pg.event.get():
-		if event.type == pg.QUIT:
-			going = False
-		elif event.type == pg.KEYDOWN:
-			if event.key == pg.K_q:
-				going = False
+        for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    going = False
+                elif event.type == pg.KEYDOWN:
+                    if event.key == pg.K_q:
+                        going = False
 
 pg.quit()
 
