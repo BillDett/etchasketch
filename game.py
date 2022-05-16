@@ -16,6 +16,9 @@ from mymaze import Maze
 #
 # Also need a button pulling pin 6 to GND to reset the screen
 #
+# TODO: start with a simple maze- if it gets solved, then make the maze more complex
+# TODO: Wall collision not working great- new maze being created but no overlay showing and easy to get lost (no lines drawn from paddles)
+#
 
 class Paddle:
 
@@ -49,6 +52,17 @@ class Paddle:
 		return self.value
 
 
+# Show the img scaled correctly centered on the surface
+def overlay(img, surface):
+    scaled_width = int(surface.get_width() * 0.8)
+    aspect = img.get_height() / img.get_width()
+    scaled_height = int(scaled_width * aspect)
+    scaledImg = pg.transform.scale(img, (scaled_width, scaled_height))
+    x = int((surface.get_width() - scaled_width)/2)
+    y = int((surface.get_height() - scaled_height)/2)
+    surface.blit(scaledImg, (x,y))
+
+
 # GPIO
 button = 6
 GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Tie switch to GND
@@ -74,6 +88,8 @@ grey = pg.Color(202, 204, 207)
 black = pg.Color(0, 0, 0)
 white = pg.Color(1, 1, 1)
 
+
+# Set up pygame
 clock = pg.time.Clock()
 
 screen = pg.display.set_mode(flags=pg.FULLSCREEN)
@@ -81,14 +97,22 @@ pg.mouse.set_visible(True)
 
 background = pg.Surface(screen.get_size())
 background = background.convert()
-#background.fill(grey)
 width, height = background.get_size()
 
+cell_width = 100	# 100 - easy, 50 - hard
+
+# Overlays
+congratsImg = pg.image.load('congrats.png')
+sorryImg = pg.image.load('sorry.png')
+anotherImg = pg.image.load('tryanother.png')
+
 # Maze stuff
-m = Maze(width, height, 100)
+m = Maze(width, height, cell_width)
 m.screen = background
 m.generateMaze()
 m.drawMaze()
+
+#overlay(sorryImg, background)
 
 print("We have " + str(len(m.maze_lines)) + " maze lines")
 
@@ -119,6 +143,12 @@ while going:
         idx = this_line.collidelist(m.maze_lines)
         if idx != -1:
             print("BOING ON WALL " + str(idx))
+            overlay(sorryImg, background)
+            pg.time.wait(3000)
+            m = Maze(width, height, cell_width)
+            m.screen = background
+            m.generateMaze()
+            m.drawMaze()
 
         if this_line.colliderect(m.exit_rect):
             print("YOU GOT OUT!")

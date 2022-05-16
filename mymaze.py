@@ -36,13 +36,18 @@ class Cell():
         self.left = 0
         
         self.next_cell = 0
+
     
     def draw(self):
         if self.entry:
-            pygame.draw.rect(self.maze.screen,GREEN,(self.x,self.y,self.maze.width,self.maze.width))
+            pygame.draw.rect(self.maze.screen,WHITE,(self.x,self.y,self.maze.width,self.maze.width))
+            self.maze.screen.blit(self.maze.startImg, (self.x,self.y))
+
         elif self.exit:
-            self.maze.exit_rect = pygame.draw.rect(self.maze.screen,RED,(self.x,self.y,self.maze.width,self.maze.width))
+            self.maze.exit_rect = pygame.draw.rect(self.maze.screen,WHITE,(self.x,self.y,self.maze.width,self.maze.width))
+            self.maze.screen.blit(self.maze.stopImg, (self.x,self.y))
         elif self.visited:
+            the_line = None
             pygame.draw.rect(self.maze.screen,WHITE,(self.x,self.y,self.maze.width,self.maze.width))
             if self.walls[0]:
                 the_line = pygame.draw.line(self.maze.screen,BLACK,(self.x,self.y),((self.x + self.maze.width),self.y),1) # top
@@ -101,6 +106,12 @@ class Maze():
         self.screen = None	# This needs to get set after construction before drawing
 
         self.exit_rect = 0	# Which cell rect is the exit?
+
+        # Icons for start/stop cells
+        self.startImg = pygame.image.load('start.png')
+        self.startImg = pygame.transform.scale(self.startImg, (self.width, self.width))
+        self.stopImg = pygame.image.load('stop.png')
+        self.stopImg = pygame.transform.scale(self.stopImg, (self.width, self.width))
 
         # Initialize an empty grid
         self.grid = []
