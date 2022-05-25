@@ -17,7 +17,7 @@ from mymaze import Maze
 # Also need a button pulling pin 6 to GND to reset the screen
 #
 # TODO: start with a simple maze- if it gets solved, then make the maze more complex
-# TODO: Wall collision not working great- new maze being created but no overlay showing and easy to get lost (no lines drawn from paddles)
+# TODO: add 'margins' on x-axis of screen (scale 'width' variable based on screen size and introduce an x-offset instead of always using 0)
 #
 
 class Paddle:
@@ -110,11 +110,6 @@ anotherImg = pg.image.load('tryanother.png')
 m = Maze(width, height, cell_width)
 m.screen = background
 m.generateMaze()
-m.drawMaze()
-
-#overlay(sorryImg, background)
-
-print("We have " + str(len(m.maze_lines)) + " maze lines")
 
 # create the paddles
 paddle_x = Paddle(chan0, 0, width)
@@ -124,39 +119,49 @@ paddle_y = Paddle(chan1, 0, height)
 last_x = paddle_x.read_value()
 last_y = paddle_y.read_value()
 
+# store list of line segments that make up what we draw with the paddles
+traces = []
+
 going = True
 while going:
         clock.tick(60)
-        screen.blit(background, (0,0))
-        pg.display.flip()
 
-	# Read the Paddles and render a segment from where we were to where we now are
+	# Read the Paddles and save a trace from where we were to where we now are
         current_x = paddle_x.read_value()
         current_y = paddle_y.read_value()
-	#print('X = {} / Y = {}'.format(current_x, current_y))	
-	# Need to think about cursor- probably need a sprite instead
-	#cursor = pg.Rect((current_x, current_y), (5,5))
-	#pg.draw.ellipse(background, white, cursor)
-        this_line = pg.draw.line(background, black, (last_x, last_y), (current_x, current_y), 2)
+        if (current_x != last_x) or (current_y != last_y):
+            the_trace = [(last_x, last_y), (current_x, current_y)]
+            traces.append(the_trace)
+            print("Saving " + str(the_trace))
         last_x = current_x
         last_y = current_y
-        idx = this_line.collidelist(m.maze_lines)
-        if idx != -1:
-            print("BOING ON WALL " + str(idx))
-            overlay(sorryImg, background)
-            pg.time.wait(3000)
-            m = Maze(width, height, cell_width)
-            m.screen = background
-            m.generateMaze()
-            m.drawMaze()
 
-        if this_line.colliderect(m.exit_rect):
-            print("YOU GOT OUT!")
+        # Clear the background
+        screen.blit(background, (0,0))
 
-	# Did they hit the 'shake' button? If so, clear screen
-        if GPIO.event_detected(button):
+        m.drawMaze()
+
+        # Draw all the traces
+        last_line = None
+        for trace in traces:
+            last_line = pg.draw.line(background, black, trace[0], trace[1], 2)
+
+        if last_line is not None:
+            # Did we collide with a wall?
+            idx = last_line.collidelist(m.maze_lines)
+            if idx != -1:
+                #print("BOING ON WALL " + str(idx))
+                overlay(sorryImg, background)
+
+            if last_line.colliderect(m.exit_rect):
+                print("YOU GOT OUT!")
+                overlay(congratsImg, background)
+
+
+        # Did they hit the 'shake' button? If so, clear screen
+        #if GPIO.event_detected(button):
                 #background.fill(grey)
-                m.drawMaze()
+        #        m.drawMaze()
 
 	# Listen for any keystroke- if we got quit signal or 'q', exit app
 	# NOTE: This doesn't work if we run this remotely via ssh
@@ -166,6 +171,9 @@ while going:
                 elif event.type == pg.KEYDOWN:
                     if event.key == pg.K_q:
                         going = False
+
+        # Update the display
+        pg.display.flip()
 
 pg.quit()
 

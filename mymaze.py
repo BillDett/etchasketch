@@ -10,6 +10,8 @@ PURPLE = (100,0,100)
 RED = (255,0,0)
 GREEN = (0,255,0)
 
+line_width = 3
+
 
 class Cell():
     def __init__(self,x,y,m):
@@ -50,14 +52,15 @@ class Cell():
             the_line = None
             pygame.draw.rect(self.maze.screen,WHITE,(self.x,self.y,self.maze.width,self.maze.width))
             if self.walls[0]:
-                the_line = pygame.draw.line(self.maze.screen,BLACK,(self.x,self.y),((self.x + self.maze.width),self.y),1) # top
+                the_line = pygame.draw.line(self.maze.screen,BLACK,(self.x,self.y),((self.x + self.maze.width),self.y),line_width) # top
             if self.walls[1]:
-                the_line = pygame.draw.line(self.maze.screen,BLACK,((self.x + self.maze.width),self.y),((self.x + self.maze.width),(self.y + self.maze.width)),1) # right
+                the_line = pygame.draw.line(self.maze.screen,BLACK,((self.x + self.maze.width),self.y),((self.x + self.maze.width),(self.y + self.maze.width)),line_width) # right
             if self.walls[2]:
-                the_line = pygame.draw.line(self.maze.screen,BLACK,((self.x + self.maze.width),(self.y + self.maze.width)),(self.x,(self.y + self.maze.width)),1) # bottom
+                the_line = pygame.draw.line(self.maze.screen,BLACK,((self.x + self.maze.width),(self.y + self.maze.width)),(self.x,(self.y + self.maze.width)),line_width) # bottom
             if self.walls[3]:
-                the_line = pygame.draw.line(self.maze.screen,BLACK,(self.x,(self.y + self.maze.width)),(self.x,self.y),1) # left
-            self.maze.maze_lines.append(the_line)  # Remember the bounding Rect for this line for collision detection
+                the_line = pygame.draw.line(self.maze.screen,BLACK,(self.x,(self.y + self.maze.width)),(self.x,self.y),line_width) # left
+            if the_line is not None:
+                self.maze.maze_lines.append(the_line)  # Remember the bounding Rect for this line for collision detection
     
     def checkNeighbors(self):
         #print("Top; y: " + str(int(self.y / self.maze.width)) + ", y - 1: " + str(int(self.y / self.maze.width) - 1))
