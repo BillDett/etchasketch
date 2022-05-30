@@ -14,10 +14,9 @@ from mymaze import Maze
 #
 # Requires two potentiometers wired to your GPIO SPI interface via an MCP3008 chip
 #
-# Also need a button pulling pin 6 to GND to reset the screen
+# One button moves to next harder level
 #
-# TODO: start with a simple maze- if it gets solved, then make the maze more complex
-# TODO: add 'margins' on x-axis of screen (scale 'width' variable based on screen size and introduce an x-offset instead of always using 0)
+# One button clears the current level
 #
 
 class Paddle:
@@ -54,7 +53,7 @@ class Paddle:
 
 # Show the img scaled correctly centered on the surface
 def overlay(img, surface):
-    scaled_width = int(surface.get_width() * 0.8)
+    scaled_width = int(maze_width_pixels * 0.8)
     aspect = img.get_height() / img.get_width()
     scaled_height = int(scaled_width * aspect)
     scaledImg = pg.transform.scale(img, (scaled_width, scaled_height))
@@ -64,9 +63,12 @@ def overlay(img, surface):
 
 
 # GPIO
-button = 6
-GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Tie switch to GND
-GPIO.add_event_detect(button, GPIO.RISING, bouncetime=200)
+level_button = 6
+clear_button = 26
+GPIO.setup(level_button, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Tie switch to GND
+GPIO.add_event_detect(level_button, GPIO.RISING, bouncetime=200)
+GPIO.setup(clear_button, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Tie switch to GND
+GPIO.add_event_detect(clear_button, GPIO.RISING, bouncetime=200)
 
 # create the spi bus
 spi = busio.SPI(clock=board.SCK, MISO=board.MISO, MOSI=board.MOSI)
@@ -88,8 +90,12 @@ grey = pg.Color(202, 204, 207)
 black = pg.Color(0, 0, 0)
 white = pg.Color(1, 1, 1)
 
+# Desired width of maze (pixels)
+maze_width_pixels = 1400
+
 
 # Set up pygame
+# We use a full screen, but only write within the 'margins' of the aspect_ratio
 clock = pg.time.Clock()
 
 screen = pg.display.set_mode(flags=pg.FULLSCREEN)
@@ -97,9 +103,17 @@ pg.mouse.set_visible(True)
 
 background = pg.Surface(screen.get_size())
 background = background.convert()
-width, height = background.get_size()
+orig_width, height = background.get_size()
+x_offset = int((orig_width - maze_width_pixels)/2)
 
-cell_width = 100	# 100 - easy, 50 - hard
+print("Original width: " + str(orig_width))
+print("X Offset: " + str(x_offset))
+
+#cell_width = 100	# 100 - easy, 50 - hard
+#cell_width = 50	# 100 - easy, 50 - hard
+cell_width = [150, 100, 75, 50]
+current_width = 0
+
 
 # Overlays
 congratsImg = pg.image.load('congrats.png')
@@ -107,12 +121,12 @@ sorryImg = pg.image.load('sorry.png')
 anotherImg = pg.image.load('tryanother.png')
 
 # Maze stuff
-m = Maze(width, height, cell_width)
+m = Maze(maze_width_pixels, height, cell_width[current_width], x_offset)
 m.screen = background
 m.generateMaze()
 
 # create the paddles
-paddle_x = Paddle(chan0, 0, width)
+paddle_x = Paddle(chan0, x_offset, maze_width_pixels)
 paddle_y = Paddle(chan1, 0, height)
 
 # see where the paddles are before we start drawing
@@ -158,10 +172,23 @@ while going:
                 overlay(congratsImg, background)
 
 
-        # Did they hit the 'shake' button? If so, clear screen
-        #if GPIO.event_detected(button):
-                #background.fill(grey)
-        #        m.drawMaze()
+        # Did they hit the level button? If so, go to next maze
+        if GPIO.event_detected(level_button):
+            if current_width == len(cell_width)-1:
+                current_width = 0
+            else:
+                current_width = current_width + 1
+            background.fill(black)
+            m = Maze(maze_width_pixels, height, cell_width[current_width], x_offset)
+            m.screen = background
+            m.generateMaze()
+            m.drawMaze()
+
+        # Did they hit the clear button? If so, clear the paddle lines
+        if GPIO.event_detected(clear_button):
+            print("Clear!")
+            traces = []
+            m.drawMaze()
 
 	# Listen for any keystroke- if we got quit signal or 'q', exit app
 	# NOTE: This doesn't work if we run this remotely via ssh

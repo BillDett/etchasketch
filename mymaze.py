@@ -41,24 +41,29 @@ class Cell():
 
     
     def draw(self):
+
+        # Account for the margins
+        render_x = self.x + self.maze.x_offset
+        render_y = self.y + self.maze.y_offset
+
         if self.entry:
-            pygame.draw.rect(self.maze.screen,WHITE,(self.x,self.y,self.maze.width,self.maze.width))
-            self.maze.screen.blit(self.maze.startImg, (self.x,self.y))
+            pygame.draw.rect(self.maze.screen,WHITE,(render_x,render_y,self.maze.width,self.maze.width))
+            self.maze.screen.blit(self.maze.startImg, (render_x,render_y))
 
         elif self.exit:
-            self.maze.exit_rect = pygame.draw.rect(self.maze.screen,WHITE,(self.x,self.y,self.maze.width,self.maze.width))
-            self.maze.screen.blit(self.maze.stopImg, (self.x,self.y))
+            self.maze.exit_rect = pygame.draw.rect(self.maze.screen,WHITE,(render_x,render_y,self.maze.width,self.maze.width))
+            self.maze.screen.blit(self.maze.stopImg, (render_x,render_y))
         elif self.visited:
             the_line = None
-            pygame.draw.rect(self.maze.screen,WHITE,(self.x,self.y,self.maze.width,self.maze.width))
+            pygame.draw.rect(self.maze.screen,WHITE,(render_x,render_y,self.maze.width,self.maze.width))
             if self.walls[0]:
-                the_line = pygame.draw.line(self.maze.screen,BLACK,(self.x,self.y),((self.x + self.maze.width),self.y),line_width) # top
+                the_line = pygame.draw.line(self.maze.screen,BLACK,(render_x,render_y),((render_x + self.maze.width),render_y),line_width) # top
             if self.walls[1]:
-                the_line = pygame.draw.line(self.maze.screen,BLACK,((self.x + self.maze.width),self.y),((self.x + self.maze.width),(self.y + self.maze.width)),line_width) # right
+                the_line = pygame.draw.line(self.maze.screen,BLACK,((render_x + self.maze.width),render_y),((render_x + self.maze.width),(render_y + self.maze.width)),line_width) # right
             if self.walls[2]:
-                the_line = pygame.draw.line(self.maze.screen,BLACK,((self.x + self.maze.width),(self.y + self.maze.width)),(self.x,(self.y + self.maze.width)),line_width) # bottom
+                the_line = pygame.draw.line(self.maze.screen,BLACK,((render_x + self.maze.width),(render_y + self.maze.width)),(render_x,(render_y + self.maze.width)),line_width) # bottom
             if self.walls[3]:
-                the_line = pygame.draw.line(self.maze.screen,BLACK,(self.x,(self.y + self.maze.width)),(self.x,self.y),line_width) # left
+                the_line = pygame.draw.line(self.maze.screen,BLACK,(render_x,(render_y + self.maze.width)),(render_x,render_y),line_width) # left
             if the_line is not None:
                 self.maze.maze_lines.append(the_line)  # Remember the bounding Rect for this line for collision detection
     
@@ -99,14 +104,19 @@ class Cell():
 
 class Maze():
 
-    def __init__(self, w, h, wd):
+    def __init__(self, w, h, wd, xo):
         global current_cell
         self.size = (w,h)
         self.width = wd
+        self.x_offset = xo
         self.cols = int(self.size[0] / self.width)
         self.rows = int(self.size[1] / self.width)
         self.stack = []
         self.screen = None	# This needs to get set after construction before drawing
+
+        # The actual height of the maze may not correspond to full height of screen, let's determine what y_offset is needed to center it
+        self.y_offset = int((self.size[1] - (self.rows * self.width)) / 2)
+        print("Maze Y offset: " + str(self.y_offset))
 
         self.exit_rect = 0	# Which cell rect is the exit?
 
@@ -117,6 +127,7 @@ class Maze():
         self.stopImg = pygame.transform.scale(self.stopImg, (self.width, self.width))
 
         # Initialize an empty grid
+        print("Maze grid is " + str(self.cols) + " by " + str(self.rows))
         self.grid = []
         for y in range(self.rows):
             self.grid.append([])
