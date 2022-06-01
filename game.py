@@ -22,12 +22,13 @@ from mymaze import Maze
 class Paddle:
 
 	def __init__(self, chan, mn, mx):
-		self.channel = chan
-		self.last_read = 0
-		self.tolerance = 250
-		self.value = -1
-		self.min = mn
-		self.max = mx
+                self.channel = chan
+                self.last_read = 0
+                self.tolerance = 250
+                self.value = mn
+                self.min = mn
+                self.max = mx
+                #print("Paddle " + str(chan) + "- min=" + str(mn) + " max=" + str(mx))
 
 
 	def read_value(self):
@@ -89,6 +90,7 @@ pg.init()
 grey = pg.Color(202, 204, 207)
 black = pg.Color(0, 0, 0)
 white = pg.Color(1, 1, 1)
+red = pg.Color(255, 0, 0)
 
 # Desired width of maze (pixels)
 maze_width_pixels = 1400
@@ -126,8 +128,8 @@ m.screen = background
 m.generateMaze()
 
 # create the paddles
-paddle_x = Paddle(chan0, x_offset, maze_width_pixels)
-paddle_y = Paddle(chan1, 0, height)
+paddle_x = Paddle(chan0, m.x_offset, m.x_offset+maze_width_pixels)
+paddle_y = Paddle(chan1, m.y_offset, height-m.y_offset)
 
 # see where the paddles are before we start drawing
 last_x = paddle_x.read_value()
@@ -178,6 +180,7 @@ while going:
                 current_width = 0
             else:
                 current_width = current_width + 1
+            traces = []
             background.fill(black)
             m = Maze(maze_width_pixels, height, cell_width[current_width], x_offset)
             m.screen = background
