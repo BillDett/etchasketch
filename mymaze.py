@@ -116,7 +116,7 @@ class Maze():
 
         # The actual height of the maze may not correspond to full height of screen, let's determine what y_offset is needed to center it
         self.y_offset = int((self.size[1] - (self.rows * self.width)) / 2)
-        print("Maze Y offset: " + str(self.y_offset))
+        #print("\t\t\tMaze Y offset: " + str(self.y_offset))
 
         self.exit_rect = 0	# Which cell rect is the exit?
 

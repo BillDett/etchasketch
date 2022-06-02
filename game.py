@@ -113,13 +113,14 @@ print("X Offset: " + str(x_offset))
 
 #cell_width = 100	# 100 - easy, 50 - hard
 #cell_width = 50	# 100 - easy, 50 - hard
-cell_width = [150, 100, 75, 50]
+cell_width = [140, 100, 75, 50]
 current_width = 0
 
 
 # Overlays
 congratsImg = pg.image.load('congrats.png')
 sorryImg = pg.image.load('sorry.png')
+ouchImg = pg.image.load('ouch.png')
 anotherImg = pg.image.load('tryanother.png')
 
 # Maze stuff
@@ -129,7 +130,7 @@ m.generateMaze()
 
 # create the paddles
 paddle_x = Paddle(chan0, m.x_offset, m.x_offset+maze_width_pixels)
-paddle_y = Paddle(chan1, m.y_offset, height-m.y_offset)
+paddle_y = Paddle(chan1, 0, height)
 
 # see where the paddles are before we start drawing
 last_x = paddle_x.read_value()
@@ -148,7 +149,7 @@ while going:
         if (current_x != last_x) or (current_y != last_y):
             the_trace = [(last_x, last_y), (current_x, current_y)]
             traces.append(the_trace)
-            print("Saving " + str(the_trace))
+            #print("Saving " + str(the_trace))
         last_x = current_x
         last_y = current_y
 
@@ -167,10 +168,10 @@ while going:
             idx = last_line.collidelist(m.maze_lines)
             if idx != -1:
                 #print("BOING ON WALL " + str(idx))
-                overlay(sorryImg, background)
+                overlay(ouchImg, background)
 
             if last_line.colliderect(m.exit_rect):
-                print("YOU GOT OUT!")
+                #print("YOU GOT OUT!")
                 overlay(congratsImg, background)
 
 
